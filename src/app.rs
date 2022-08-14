@@ -1,6 +1,6 @@
 use std::time::Instant;
 use eframe::App;
-use egui::Slider;
+use egui::{Slider, TextStyle, Visuals, Frame, style::Margin};
 
 enum Status {
   Stopped, Working, Resting
@@ -92,19 +92,26 @@ impl App for Omad {
   fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
     crate::app_thread::init_once(ctx.clone());
 
+    ctx.set_visuals(Visuals::dark());
+
     self.on_update();
 
     egui::CentralPanel::default().show(ctx, |ui| {
 
       ui.vertical(|ui| {
         ui.heading("Estadísticas");
+        ui.separator();
         ui.label(format!("Pomodoros hechos: {}", self.total_pomodoros));
         ui.label(format!("Updates: {}", self.updates));
         if let Some(start_time) = self.pomodoro_start_time {
           let time = start_time.elapsed().as_secs(); // TODO: Improve
           ui.label(format!("Tiempo transcurrido en el último intervalo: {}", time));
         }
+
+        ui.add_space(10.0);
+
         ui.heading("Configuración");
+        ui.separator();
         ui.label(format!("Working time (minutes): {}", self.working_time_min));
         let working_slider = Slider::new(&mut self.working_time_min, 1..=240).step_by(1.0).smart_aim(false);
         ui.add(working_slider);
@@ -122,19 +129,26 @@ impl App for Omad {
 
     egui::TopBottomPanel::bottom("Buttons").show(ctx, |ui| {
       ui.horizontal(|ui| {
+        Frame::default().inner_margin(Margin::from(5.0)).show(ui, |ui| {
+          ui.centered_and_justified(|ui| {
 
-        match self.status {
-          Status::Working | Status::Resting => {
-            if ui.button("Stop").clicked() {
-              self.on_stop();
+            let style = ui.style_mut();
+            style.text_styles.get_mut(&TextStyle::Button).unwrap().size = 40.0;
+
+            match self.status {
+              Status::Working | Status::Resting => {
+                if ui.button("STOP").clicked() {
+                  self.on_stop();
+                }
+              },
+              Status::Stopped => {
+                if ui.button("START").clicked() {
+                  self.on_start();
+                }
+              }
             }
-          },
-          Status::Stopped => {
-            if ui.button("Start").clicked() {
-              self.on_start();
-            }
-          }
-        }
+          });
+        });
       });
     });
   }
