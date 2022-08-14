@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // Hide console window in release
+
 mod app;
 mod app_thread;
 mod notify;
