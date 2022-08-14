@@ -8,8 +8,11 @@ enum Status {
 
 pub struct Omad {
   total_pomodoros: u32,
+  total_pomodoros_since_long_rest: u32,
   working_time_min: u32,
   resting_time_min: u32,
+  pomodoros_before_long_rest: u32,
+  long_resting_time_min: u32,
   updates: u32,
   status: Status,
   pomodoro_start_time: Option<Instant>
@@ -19,8 +22,11 @@ impl Omad {
   pub fn new() -> Self {
     Omad {
       total_pomodoros: 0,
+      total_pomodoros_since_long_rest: 0,
       working_time_min: 25,
       resting_time_min: 5,
+      pomodoros_before_long_rest: 3,
+      long_resting_time_min: 30,
       updates: 0,
       status: Status::Stopped,
       pomodoro_start_time: None
@@ -56,7 +62,13 @@ impl Omad {
 
   fn on_update_resting(&mut self) {
     let elapsed = self.pomodoro_start_time.unwrap().elapsed(); // Unwrap: it shoudn't be None here
-    if elapsed.as_secs() >= 60 * self.resting_time_min as u64 {
+
+    if self.total_pomodoros_since_long_rest >= self.pomodoros_before_long_rest {
+      if elapsed.as_secs() >= 60 * self.long_resting_time_min as u64 {
+        self.total_pomodoros_since_long_rest = 0;
+        self.start_working();
+      }
+    } else if elapsed.as_secs() >= 60 * self.resting_time_min as u64 {
       self.start_working();
     }
   }
@@ -70,6 +82,7 @@ impl Omad {
   fn start_resting(&mut self) { // ¿Puedo forzar a que sólo sea llamada por update?
     crate::notify::notify_stop();
     self.total_pomodoros += 1;
+    self.total_pomodoros_since_long_rest += 1;
     self.status = Status::Resting;
     self.pomodoro_start_time = Some(Instant::now());
   }
@@ -98,6 +111,12 @@ impl App for Omad {
         ui.label(format!("Resting time (minutes): {}", self.resting_time_min));
         let resting_slider = Slider::new(&mut self.resting_time_min, 1..=90).step_by(1.0).smart_aim(false);
         ui.add(resting_slider);
+        ui.label(format!("Pomodoros before long rest: {}", self.pomodoros_before_long_rest));
+        let pomodoros_before_long_rest = Slider::new(&mut self.pomodoros_before_long_rest, 1..=10).step_by(1.0).smart_aim(false);
+        ui.add(pomodoros_before_long_rest);
+        ui.label(format!("Long resting time (minutes): {}", self.long_resting_time_min));
+        let long_resting_slider = Slider::new(&mut self.long_resting_time_min, 1..=240).step_by(1.0).smart_aim(false);
+        ui.add(long_resting_slider);
       });
     });
 
