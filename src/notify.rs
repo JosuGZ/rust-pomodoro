@@ -13,7 +13,7 @@ pub fn notify_start() {
     .show();
 
   if let Err(error) = res {
-    println!("Error: {:?}", error);
+    println!("Error: {error:?}");
   }
 }
 
@@ -27,6 +27,6 @@ pub fn notify_stop() {
     .show();
 
   if let Err(error) = res {
-    println!("Error: {:?}", error);
+    println!("Error: {error:?}");
   }
 }

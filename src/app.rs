@@ -105,7 +105,7 @@ impl App for Omad {
         ui.label(format!("Updates: {}", self.updates));
         if let Some(start_time) = self.pomodoro_start_time {
           let time = start_time.elapsed().as_secs(); // TODO: Improve
-          ui.label(format!("Tiempo transcurrido en el último intervalo: {}", time));
+          ui.label(format!("Tiempo transcurrido en el último intervalo: {time}"));
         }
 
         ui.add_space(10.0);
